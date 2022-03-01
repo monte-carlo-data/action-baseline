@@ -48,10 +48,12 @@ async function run() {
             plugins = await common.helper.processLineByLine(`${workspace}/${rulesFileLocation}`);
         }
 
-        // Generate Cognito ID token.
-        let cognito_id_token = getBearerToken("test", "pass");
+        // Generate Cognito ID token. We'll use this for our bearer token.
+        let cognito_id_token = getBearerToken(process.env.USERNAME, process.env.PASSWORD);
 
         await exec.exec(`docker pull ${docker_name} -q`);
+        // In this case, we're okay with this token showing up in command line history-- it's for an unprivileged account in dev, and it's logged out
+        //  when this test concludes, restricting its viability to the JWT's lifetime only.
         let command = (`docker run --env ZAP_AUTH_HEADER_VALUE="Bearer ${cognito_id_token}" --user root -v ${workspace}:/zap/wrk/:rw --network="host" ` +
             `-t ${docker_name} zap-baseline.py -t ${target} -J ${jsonReportName} -w ${mdReportName}  -r ${htmlReportName} ${cmdOptions}`);
 
